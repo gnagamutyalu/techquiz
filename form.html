@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Form - Restricted Mode</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        #formContainer {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #messageBar {
+            background-color: #f0f0f0;
+            padding: 10px;
+            text-align: center;
+        }
+        #formIframe {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+        }
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #overlayContent {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+    <script>
+        let formActive = true;
+        let formClosed = false;
+        let initialLoad = true;
+        let hasClosed = false;
+        let pageRefreshed = false; // Add a flag to track if the page was refreshed
+
+        window.onload = function() {
+            if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_RELOAD) {
+                pageRefreshed = true;
+                hasClosed = true; // Treat refresh as a close
+                document.getElementById("formContainer").style.display = "none";
+                document.getElementById("overlayContent").innerHTML = "<h2>Form Closed</h2><p>Page refreshing is not allowed. The form has been closed.</p>";
+                document.getElementById("overlay").style.display = "flex";
+            } else {
+                enableFullScreen();
+            }
+        };
+
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden && formActive && !formClosed && !hasClosed) {
+                document.getElementById("overlay").style.display = "flex";
+                formActive = false;
+            }
+        });
+
+        document.addEventListener("visibilitychange", function() {
+            if (!document.hidden && !formActive && !formClosed && !initialLoad && !hasClosed) {
+                document.getElementById("formContainer").style.display = "none";
+                document.getElementById("overlayContent").innerHTML = "<h2>Form Closed</h2><p>Tab switching is not allowed. The form has been closed.</p>";
+                formClosed = true;
+                document.getElementById("overlay").style.display = "flex";
+                hasClosed = true;
+            }
+            initialLoad = false;
+        });
+
+        function enableFullScreen() {
+            let elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function closeOverlay() {}
+    </script>
+</head>
+<body>
+    <div id="formContainer">
+        <div id="messageBar">
+            Please complete the form without switching tabs or refreshing.
+        </div>
+        <iframe id="formIframe" src="https://forms.gle/2nivSJnPdfGMWNvs5" width="100%" height="800px"></iframe>
+    </div>
+    <div id="overlay">
+        <div id="overlayContent">
+            <h2>Access Denied</h2>
+            <p>Tab switching or refreshing is not allowed. Please return to the form tab.</p>
+            <button onclick="closeOverlay()">OK</button>
+        </div>
+    </div>
+</body>
+</html>
